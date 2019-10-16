@@ -1,17 +1,16 @@
 {
   "name": "react-router-fork",
   "version": "4.2.0",
-  "description": "",
+  "description": "Simpler routing based on react-router",
   "keywords": [
     "react",
-    "hooks",
+    "router",
+    "fork",
     "state",
-    "pure",
-    "dependent",
-    "async"
+    "typescript"
   ],
   "homepage": "https://github.com/nukisman/react-router-fork",
-  "readme": "../RE",
+  "readme": "./README.md",
   "author": "nukisman (Alexander Nuikin)",
   "license": "MIT",
   "repository": "nukisman/react-router-fork",
@@ -33,9 +32,7 @@
     "predeploy": "cd example && yarn install && yarn run build",
     "deploy": "gh-pages -d example/build"
   },
-  "dependencies": {
-    "stringify-object": "^3.3.0"
-  },
+  "dependencies": {},
   "peerDependencies": {
     "react": "^16.10.2",
     "react-dom": "^16.10.2",

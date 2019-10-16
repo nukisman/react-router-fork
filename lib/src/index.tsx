@@ -1,4 +1,10 @@
-import React, { FC, Fragment, ReactNode, CSSProperties } from 'react';
+import React, {
+  FC,
+  Fragment,
+  ReactNode,
+  CSSProperties,
+  useContext
+} from 'react';
 import map from 'lodash/map';
 import uniq from 'lodash/uniq';
 import difference from 'lodash/difference';
@@ -155,126 +161,114 @@ export const Fork: FC<{
 }) => {
   const cases = caseMap(name, caseList, children);
   const caseValues = Object.keys(cases);
-  if (caseValues.length === 0) return null;
-  else {
-    if (dflt && !caseValues.includes(dflt))
-      throw new ForkError(
-        name,
-        `Default case (${dflt}) not contained in case list: ${caseValues.join(
-          ', '
-        )}`
-      );
-    const defaultCase: string = dflt || caseValues[0];
-    // FIXME
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const activeCase = useInput<string>(defaultCase);
-    // FIXME
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const match = useInput<Maybe<match<{ [key: string]: string }>>>(undefined);
-    return (
-      <CaseContext.Consumer>
-        {(caseContext: CaseContext) => (
-          <Route
-            path={absUrl([...caseContext.path, `:${name}?`])}
-            children={props => {
-              if (caseContext.isActive && props.match !== null) {
-                match.set(props.match);
-              }
-
-              if (match.state) {
-                const caseValue: string = match.state.params[name];
-                console.log(
-                  'Fork Route:',
-                  { path: absUrl([...caseContext.path, `:${name}?`]) },
-                  { caseValue, caseValues, matchState: match.state },
-                  props
-                );
-                const isValid: boolean = caseValues.includes(caseValue);
-                const isActive: boolean =
-                  caseContext.isActive && props.match !== null;
-                const defaultPath = [
-                  ...caseContext.parentFork.defaultPath,
-                  defaultCase
-                ];
-                const breadcrumbPath = [...caseContext.path, defaultCase];
-                const breadcrumbUrl = absUrl(breadcrumbPath);
-                const switchContext: ForkContext = {
-                  name,
-                  isActive,
-                  activeCase: isValid ? caseValue : activeCase.state,
-                  defaultCase,
-                  defaultPath,
-                  defaultUrl: absUrl(defaultPath),
-                  breadcrumbs: [
-                    ...caseContext.parentFork.breadcrumbs,
-                    {
-                      name: caseContext.parentFork.name,
-                      value: caseContext.value,
-                      defaultCase,
-                      path: breadcrumbPath,
-                      url: breadcrumbUrl
-                    }
-                  ],
-                  params: {
-                    ...caseContext.parentFork.params,
-                    [name]: {
-                      value: caseValue,
-                      path: [...caseContext.path, caseValue],
-                      url: absUrl([...caseContext.path, caseValue])
-                    }
-                  },
-                  paramsOrder: [...caseContext.parentFork.paramsOrder, name],
-                  cases: caseValues.reduce((acc, c) => {
-                    const path = [...caseContext.path, c];
-                    return {
-                      ...acc,
-                      [c]: { path, url: absUrl(path) }
-                    };
-                  }, {}),
-                  parentCase: caseContext
-                };
-                const redirectOn = true;
-                const redirectTo: string = absUrl([
-                  ...caseContext.path,
-                  caseValue === undefined ? activeCase.state : defaultCase
-                ]);
-                const content = (
-                  <Fragment>
-                    {map(cases, (content: ReactNode, value: string) => (
-                      <Case
-                        key={value}
-                        caseContext={caseContext}
-                        switchContext={switchContext}
-                        value={value}
-                        activeCase={activeCase}
-                        wrapper={caseWrapper}>
-                        {content}
-                      </Case>
-                    ))}
-                    {redirectOn &&
-                      caseContext.isActive &&
-                      !isValid &&
-                      props.match &&
-                      props.match.url !== redirectTo && (
-                        <Redirect to={redirectTo} />
-                      )}
-                  </Fragment>
-                );
-                return (
-                  <ForkContext.Provider value={switchContext}>
-                    {wrapper({
-                      ...switchContext,
-                      children: content
-                    })}
-                  </ForkContext.Provider>
-                );
-              } else return null;
-            }}
-          />
-        )}
-      </CaseContext.Consumer>
+  const match = useInput<Maybe<match<{ [key: string]: string }>>>(undefined);
+  const caseContext = useContext(CaseContext);
+  if (dflt && !caseValues.includes(dflt))
+    throw new ForkError(
+      name,
+      `Default case (${dflt}) not contained in case list: ${caseValues.join(
+        ', '
+      )}`
     );
-  }
+  const defaultCase: string = dflt || caseValues[0];
+  const activeCase = useInput<string>(defaultCase);
+  return caseValues.length === 0 ? null : (
+    <Route
+      path={absUrl([...caseContext.path, `:${name}?`])}
+      children={props => {
+        if (caseContext.isActive && props.match !== null) {
+          match.set(props.match);
+        }
+
+        if (match.state) {
+          const caseValue: string = match.state.params[name];
+          console.log(
+            'Fork Route:',
+            { path: absUrl([...caseContext.path, `:${name}?`]) },
+            { caseValue, caseValues, matchState: match.state },
+            props
+          );
+          const isValid: boolean = caseValues.includes(caseValue);
+          const isActive: boolean =
+            caseContext.isActive && props.match !== null;
+          const defaultPath = [
+            ...caseContext.parentFork.defaultPath,
+            defaultCase
+          ];
+          const breadcrumbPath = [...caseContext.path, defaultCase];
+          const breadcrumbUrl = absUrl(breadcrumbPath);
+          const switchContext: ForkContext = {
+            name,
+            isActive,
+            activeCase: isValid ? caseValue : activeCase.state,
+            defaultCase,
+            defaultPath,
+            defaultUrl: absUrl(defaultPath),
+            breadcrumbs: [
+              ...caseContext.parentFork.breadcrumbs,
+              {
+                name: caseContext.parentFork.name,
+                value: caseContext.value,
+                defaultCase,
+                path: breadcrumbPath,
+                url: breadcrumbUrl
+              }
+            ],
+            params: {
+              ...caseContext.parentFork.params,
+              [name]: {
+                value: caseValue,
+                path: [...caseContext.path, caseValue],
+                url: absUrl([...caseContext.path, caseValue])
+              }
+            },
+            paramsOrder: [...caseContext.parentFork.paramsOrder, name],
+            cases: caseValues.reduce((acc, c) => {
+              const path = [...caseContext.path, c];
+              return {
+                ...acc,
+                [c]: { path, url: absUrl(path) }
+              };
+            }, {}),
+            parentCase: caseContext
+          };
+          const redirectOn = true;
+          const redirectTo: string = absUrl([
+            ...caseContext.path,
+            caseValue === undefined ? activeCase.state : defaultCase
+          ]);
+          const content = (
+            <Fragment>
+              {map(cases, (content: ReactNode, value: string) => (
+                <Case
+                  key={value}
+                  caseContext={caseContext}
+                  switchContext={switchContext}
+                  value={value}
+                  activeCase={activeCase}
+                  wrapper={caseWrapper}>
+                  {content}
+                </Case>
+              ))}
+              {redirectOn &&
+                caseContext.isActive &&
+                !isValid &&
+                props.match &&
+                props.match.url !== redirectTo && <Redirect to={redirectTo} />}
+            </Fragment>
+          );
+          return (
+            <ForkContext.Provider value={switchContext}>
+              {wrapper({
+                ...switchContext,
+                children: content
+              })}
+            </ForkContext.Provider>
+          );
+        } else return null;
+      }}
+    />
+  );
 };
 
 const Case: FC<{

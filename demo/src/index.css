@@ -2,12 +2,19 @@ body {
   margin: 0;
   padding: 0;
   font-family: sans-serif;
-  color: steelblue;
+  color: #ABD;
   background-color: #282c34;
 }
 
 h1, h2, h3, h4, h5, h6 {
   color: dodgerblue;
+}
+
+a {
+  color: deepskyblue;
+}
+a:hover {
+  color: #DEF;
 }
 
 input {
@@ -30,4 +37,10 @@ button {
   padding-bottom: 0.2em;
 }
 
+.valid {
+  color: green;
+}
+.invalid {
+  color: red;
+}
 

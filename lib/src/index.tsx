@@ -1,9 +1,4 @@
-import React, {
-  FunctionComponent,
-  Fragment,
-  ReactNode,
-  CSSProperties
-} from 'react';
+import React, { FC, Fragment, ReactNode, CSSProperties } from 'react';
 import map from 'lodash/map';
 import uniq from 'lodash/uniq';
 import difference from 'lodash/difference';
@@ -28,7 +23,7 @@ export type Breadcrumb = {
   path: string[];
 };
 
-type SwitchContext = {
+type ForkContext = {
   name: string;
   isActive: boolean;
   cases: { [key: string]: { url: string; path: string[] } };
@@ -43,7 +38,7 @@ type SwitchContext = {
   breadcrumbs: Breadcrumb[];
   parentCase: Maybe<CaseContext>;
 };
-const rootSwitchContext: SwitchContext = {
+const rootForkContext: ForkContext = {
   name: '',
   isActive: true,
   cases: {},
@@ -56,7 +51,7 @@ const rootSwitchContext: SwitchContext = {
   breadcrumbs: [],
   parentCase: undefined
 };
-const SwitchContext = React.createContext<SwitchContext>(rootSwitchContext);
+const ForkContext = React.createContext<ForkContext>(rootForkContext);
 
 type CaseContext = {
   isActive: boolean;
@@ -65,7 +60,7 @@ type CaseContext = {
   url: string;
   params: ParamsData;
   paramsOrder: string[];
-  parentSwitch: SwitchContext;
+  parentFork: ForkContext;
 };
 
 const rootCaseContext: CaseContext = {
@@ -75,7 +70,7 @@ const rootCaseContext: CaseContext = {
   params: {},
   paramsOrder: [],
   value: '',
-  parentSwitch: rootSwitchContext
+  parentFork: rootForkContext
 };
 const CaseContext = React.createContext<CaseContext>(rootCaseContext);
 
@@ -90,12 +85,12 @@ const caseMap = (
 ): CaseMap => {
   if (children instanceof Function) {
     if (caseList === undefined)
-      throw new SwitchError(
+      throw new ForkError(
         name,
         `If children is function then cases should be array`
       );
     else if (caseList.length === 0)
-      throw new SwitchError(name, `List of cases should not be empty`);
+      throw new ForkError(name, `List of cases should not be empty`);
     else {
       checkCaseList(name, caseList);
       return caseList.reduce(
@@ -105,7 +100,7 @@ const caseMap = (
     }
   } else {
     if (caseList !== undefined)
-      throw new SwitchError(
+      throw new ForkError(
         name,
         `If children is object then cases should be undefined`
       );
@@ -119,7 +114,7 @@ const caseMap = (
 const checkCaseList = (name: string, caseList: string[]): void => {
   const empty: Maybe<string> = caseList.find(c => c.trim() === '');
   if (empty !== undefined)
-    throw new SwitchError(
+    throw new ForkError(
       name,
       `List of cases contains empty (space only) value: ${caseList
         .map(c => `"${c}"`)
@@ -134,19 +129,18 @@ const checkCaseList = (name: string, caseList: string[]): void => {
   }
 };
 
-class SwitchError extends Error {
+class ForkError extends Error {
   constructor(name: string, msg: string) {
     super(`${name}: ${msg}`);
   }
 }
 
 /** Declare new (sub)tree */
-// TODO: Rename to Fork
-export const Switch: FunctionComponent<{
+export const Fork: FC<{
   name: string;
   default?: Maybe<string>;
   // TODO: Make context readonly
-  wrapper?: Maybe<SwitchWrapper>;
+  wrapper?: Maybe<ForkWrapper>;
   // TODO: Make context readonly
   caseWrapper?: Maybe<CaseWrapper>;
   cases?: Maybe<string[]>;
@@ -156,7 +150,7 @@ export const Switch: FunctionComponent<{
   default: dflt,
   cases: caseList,
   children,
-  wrapper = defaultSwitchWrapper,
+  wrapper = defaultForkWrapper,
   caseWrapper
 }) => {
   const cases = caseMap(name, caseList, children);
@@ -164,7 +158,7 @@ export const Switch: FunctionComponent<{
   if (caseValues.length === 0) return null;
   else {
     if (dflt && !caseValues.includes(dflt))
-      throw new SwitchError(
+      throw new ForkError(
         name,
         `Default case (${dflt}) not contained in case list: ${caseValues.join(
           ', '
@@ -190,7 +184,7 @@ export const Switch: FunctionComponent<{
               if (match.state) {
                 const caseValue: string = match.state.params[name];
                 console.log(
-                  'Switch Route:',
+                  'Fork Route:',
                   { path: absUrl([...caseContext.path, `:${name}?`]) },
                   { caseValue, caseValues, matchState: match.state },
                   props
@@ -199,12 +193,12 @@ export const Switch: FunctionComponent<{
                 const isActive: boolean =
                   caseContext.isActive && props.match !== null;
                 const defaultPath = [
-                  ...caseContext.parentSwitch.defaultPath,
+                  ...caseContext.parentFork.defaultPath,
                   defaultCase
                 ];
                 const breadcrumbPath = [...caseContext.path, defaultCase];
                 const breadcrumbUrl = absUrl(breadcrumbPath);
-                const switchContext: SwitchContext = {
+                const switchContext: ForkContext = {
                   name,
                   isActive,
                   activeCase: isValid ? caseValue : activeCase.state,
@@ -212,9 +206,9 @@ export const Switch: FunctionComponent<{
                   defaultPath,
                   defaultUrl: absUrl(defaultPath),
                   breadcrumbs: [
-                    ...caseContext.parentSwitch.breadcrumbs,
+                    ...caseContext.parentFork.breadcrumbs,
                     {
-                      name: caseContext.parentSwitch.name,
+                      name: caseContext.parentFork.name,
                       value: caseContext.value,
                       defaultCase,
                       path: breadcrumbPath,
@@ -222,14 +216,14 @@ export const Switch: FunctionComponent<{
                     }
                   ],
                   params: {
-                    ...caseContext.parentSwitch.params,
+                    ...caseContext.parentFork.params,
                     [name]: {
                       value: caseValue,
                       path: [...caseContext.path, caseValue],
                       url: absUrl([...caseContext.path, caseValue])
                     }
                   },
-                  paramsOrder: [...caseContext.parentSwitch.paramsOrder, name],
+                  paramsOrder: [...caseContext.parentFork.paramsOrder, name],
                   cases: caseValues.reduce((acc, c) => {
                     const path = [...caseContext.path, c];
                     return {
@@ -267,12 +261,12 @@ export const Switch: FunctionComponent<{
                   </Fragment>
                 );
                 return (
-                  <SwitchContext.Provider value={switchContext}>
+                  <ForkContext.Provider value={switchContext}>
                     {wrapper({
                       ...switchContext,
                       children: content
                     })}
-                  </SwitchContext.Provider>
+                  </ForkContext.Provider>
                 );
               } else return null;
             }}
@@ -283,10 +277,10 @@ export const Switch: FunctionComponent<{
   }
 };
 
-const Case: FunctionComponent<{
+const Case: FC<{
   children: ReactNode;
   caseContext: CaseContext;
-  switchContext: SwitchContext;
+  switchContext: ForkContext;
   value: string;
   activeCase: Input<string>;
   wrapper?: CaseWrapper;
@@ -312,7 +306,7 @@ const Case: FunctionComponent<{
         const url = absUrl(path);
         const context: CaseContext = {
           // TODO: Make context readonly
-          parentSwitch: switchContext,
+          parentFork: switchContext,
           isActive,
           value,
           params: {
@@ -343,18 +337,18 @@ const Case: FunctionComponent<{
 export const absUrl = (items: string[]): string => `/${items.join('/')}`;
 
 export type ChildrenProps = { children: ReactNode };
-export type SwitchWrapper = (props: SwitchContext & ChildrenProps) => ReactNode;
+export type ForkWrapper = (props: ForkContext & ChildrenProps) => ReactNode;
 
 export type CaseWrapper = (props: CaseContext & ChildrenProps) => ReactNode;
 
-export const defaultSwitchWrapper: SwitchWrapper = ({ isActive, children }) => (
+export const defaultForkWrapper: ForkWrapper = ({ isActive, children }) => (
   <ActiveView isActive={isActive} children={children} />
 );
 export const defaultCaseWrapper: CaseWrapper = ({ isActive, children }) => (
   <ActiveView isActive={isActive} children={children} />
 );
 
-export const ActiveView: FunctionComponent<{
+export const ActiveView: FC<{
   isActive: boolean;
   children: ReactNode;
   className?: string;
@@ -385,31 +379,31 @@ export const ActiveView: FunctionComponent<{
   );
 
 // TODO: Make context readonly
-/** SwitchConsumer - uses current route case */
-export const SwitchConsumer: FunctionComponent<{
-  children: (props: SwitchContext) => ReactNode;
+/** ForkConsumer - uses current route case */
+export const ForkConsumer: FC<{
+  children: (props: ForkContext) => ReactNode;
 }> = ({ children }) => (
-  <SwitchContext.Consumer>
-    {(context: SwitchContext) => {
-      if (context === rootSwitchContext)
+  <ForkContext.Consumer>
+    {(context: ForkContext) => {
+      if (context === rootForkContext)
         throw new Error(
-          'SwitchConsumer out of any SwitchContext. Use SwitchConsumer inside of Switch.children or Switch.wrapper'
+          'ForkConsumer out of any ForkContext. Use ForkConsumer inside of Fork.children or Fork.wrapper'
         );
       else return children(context);
     }}
-  </SwitchContext.Consumer>
+  </ForkContext.Consumer>
 );
 
 // TODO: Make context readonly
 /** CaseConsumer - uses current route case */
-export const CaseConsumer: FunctionComponent<{
+export const CaseConsumer: FC<{
   children: (props: CaseContext) => ReactNode;
 }> = ({ children }) => (
   <CaseContext.Consumer>
     {(context: CaseContext) => {
       if (context === rootCaseContext)
         throw new Error(
-          'CaseConsumer out of any CaseContext. Use CaseConsumer inside of Switch.children or Switch.caseWrapper'
+          'CaseConsumer out of any CaseContext. Use CaseConsumer inside of Fork.children or Fork.caseWrapper'
         );
       else return children(context);
     }}
@@ -419,14 +413,14 @@ export const CaseConsumer: FunctionComponent<{
 // Ugly Code
 //  [x] Maybe<Context> ==> Context
 //  [x] Avoid caseValue === ''
-//  [x] Switch.caseWrapper
-//  [x] Clear design for Switch vs Case
+//  [x] Fork.caseWrapper
+//  [x] Clear design for Fork vs Case
 //  [x] ActiveView: Single place for controlling flush:boolean & style={..., display: 'none'}
 // Inactive nodes: (solution: save some state?)
 //  [x] Re-renders on match.params changed, but still inactive
 //  [x] Receives invalid data (match.params and match.path)
 //  [x] Lazy rendering: Should not be render if was not active before (no previous valid data)
-//    [x] Lazy rendering: Switch
+//    [x] Lazy rendering: Fork
 //    [x] Lazy rendering: Case
 // Features:
 //  [x] Save previously selected sub-path (redirect to activeCase.state)

@@ -1,11 +1,11 @@
-import React, { Fragment, FC } from 'react';
+import React, { FC } from 'react';
 import {
-  Switch,
-  SwitchWrapper,
+  Fork,
+  ForkWrapper,
   CaseConsumer,
   CaseWrapper,
   ActiveView,
-  SwitchConsumer
+  ForkConsumer
 } from 'react-router-fork';
 import map from 'lodash/map';
 import reduce from 'lodash/reduce';
@@ -20,15 +20,47 @@ const txsFilter = ['all', 'deposit', 'withdraw'];
 
 /** Good: Now Node knows about its cases
  *  Good: Explicit typing of leaf components: Txs, Receive, etc. */
+
 const App: FC<{}> = () => (
   <BrowserRouter>
+    <>
+      <h3 className="orange">Demo: react-router-fork</h3>
+      <h4>Absolute links</h4>
+      {menu(
+        '',
+        ' ',
+        '  ',
+        '/ ',
+        '/  ',
+        '/hello world',
+        '/xxx',
+        '/',
+        '/setup2fa',
+        '/wallet',
+        '/wallet/btc',
+        '/wallet/xxx',
+        '/wallet/eth',
+        '/wallet/eth/txs',
+        '/wallet/eth/txs/deposit',
+        '/wallet/eth/txs/invalid',
+        '/wallet/eth/receive',
+        '/wallet/eth/bbb',
+        '/cards',
+        '/cards/eth',
+        '/cards/btc',
+        '/cards/ltc',
+        '/cards/aaa'
+      )}
+      <Test />
+    </>
+  </BrowserRouter>
+);
+export default App;
+
+const Test: FC<{}> = () => (
+  <>
     <hr />
-    <h2 className="orange">Declarative 2</h2>
-    <Switch
-      name="section"
-      default="wallet"
-      wrapper={Tabs}
-      caseWrapper={ShowCase}>
+    <Fork name="section" default="wallet" wrapper={Tabs} caseWrapper={ShowCase}>
       {{
         setup2fa: 'Setup 2FA',
         'hello world': 'Hello World',
@@ -36,21 +68,21 @@ const App: FC<{}> = () => (
         // ' ': 'Space Case'</ShowCase>',
         // '  ': 'Double Space Case',
         wallet: (
-          <Switch
+          <Fork
             name="currency"
             default="eth"
             cases={currencies}
             wrapper={Tabs}
             caseWrapper={ShowCase}>
             {(currency: string) => (
-              <Switch
+              <Fork
                 name="op"
                 default="txs"
                 wrapper={Tabs}
                 caseWrapper={ShowCase}>
                 {{
                   txs: (
-                    <Switch
+                    <Fork
                       name="filter"
                       default="deposit"
                       // cases={[...txsFilter, ' ']}
@@ -60,32 +92,30 @@ const App: FC<{}> = () => (
                       {(filter: string) => (
                         <Txs currency={currency} filter={filter} />
                       )}
-                    </Switch>
+                    </Fork>
                   ),
                   receive: <Receive currency={currency} />
                 }}
-              </Switch>
+              </Fork>
             )}
-          </Switch>
+          </Fork>
         ),
         cards: (
-          <Switch
+          <Fork
             name="currency"
             default="eth"
             wrapper={Tabs}
             caseWrapper={ShowCase}
             cases={currencies}>
             {(currency: string) => <Receive currency={currency} />}
-          </Switch>
+          </Fork>
         )
       }}
-    </Switch>
-  </BrowserRouter>
+    </Fork>
+  </>
 );
 
-export default App;
-
-const Tabs: SwitchWrapper = ({ children, cases }) => (
+const Tabs: ForkWrapper = ({ children, cases }) => (
   <div>
     [{' '}
     {intercalateFragments(
@@ -101,7 +131,7 @@ const Tabs: SwitchWrapper = ({ children, cases }) => (
 );
 
 const ShowCase: CaseWrapper = ({
-  parentSwitch,
+  parentFork,
   isActive,
   value,
   url,
@@ -124,7 +154,7 @@ const ShowCase: CaseWrapper = ({
   >
     <hr />
     <h2>
-      {parentSwitch.name}: {value}
+      {parentFork.name}: {value}
     </h2>
     {url}
     <br />
@@ -135,9 +165,9 @@ const ShowCase: CaseWrapper = ({
 );
 
 const Breadcrumbs: FC<{}> = () => (
-  <SwitchConsumer>
+  <ForkConsumer>
     {({ paramsOrder, defaultPath, breadcrumbs }) => (
-      <Fragment>
+      <>
         {/*<br />*/}
         {/*[{paramsOrder.join(', ')}]*/}
         {/*<br />*/}
@@ -152,9 +182,9 @@ const Breadcrumbs: FC<{}> = () => (
           )),
           ' / '
         )}
-      </Fragment>
+      </>
     )}
-  </SwitchConsumer>
+  </ForkConsumer>
 );
 
 const ShowParams: FC<{
@@ -168,12 +198,12 @@ const ShowParams: FC<{
         {}
       );
       return (
-        <Fragment>
+        <>
           <ul>
             {map(params, (data, name) => (
               <li key={name}>
                 {name}:{' '}
-                <span style={{ color: invalidParams[name] ? 'red' : 'green' }}>
+                <span className={invalidParams[name] ? 'invalid' : 'valid'}>
                   {data.value}{' '}
                   {invalidParams[name] && (
                     <span
@@ -185,7 +215,7 @@ const ShowParams: FC<{
               </li>
             ))}
           </ul>
-        </Fragment>
+        </>
       );
     }}
   </CaseConsumer>
@@ -203,9 +233,9 @@ export const Txs: FC<{
   currency: string;
   filter: string;
 }> = props => (
-  <Fragment>
+  <>
     <ShowParams expectedParams={props} />
     <h6>Relative links</h6>
     {menu('./all', './all/../../txs/all', '../txs/./deposit', '../receive')}
-  </Fragment>
+  </>
 );

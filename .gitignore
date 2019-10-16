@@ -1,0 +1,10 @@
+/.idea
+
+/demo/node_modules
+/demo/yarn-error.log
+/demo/build
+
+/lib/node_modules
+/lib/yarn-error.log
+/lib/build
+

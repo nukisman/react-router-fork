@@ -1,0 +1,33 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+  color: steelblue;
+  background-color: #282c34;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: dodgerblue;
+}
+
+input {
+  font-size: 1em;
+  background-color: #222222;
+  color: #dddddd;
+  border: solid slategray 1px;
+  border-radius: 0.5em;
+  padding: 0.5em;
+  margin: 0.5em;
+}
+
+button {
+  font-size: 1em;
+  border-radius: 0.3em;
+}
+
+.block {
+  padding-top: 0.2em;
+  padding-bottom: 0.2em;
+}
+
+

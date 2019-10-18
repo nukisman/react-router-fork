@@ -173,6 +173,7 @@ export const Fork: FC<{
   const defaultCase: string = dflt || caseValues[0];
   const activeCase = useInput<string>(defaultCase);
   return caseValues.length === 0 ? null : (
+    // TODO: DOM tree depth: Replace <Route path> with useRouteMatch(path)
     <Route
       path={absUrl([...caseContext.path, `:${name}?`])}
       children={props => {
@@ -197,7 +198,7 @@ export const Fork: FC<{
           ];
           const breadcrumbPath = [...caseContext.path, defaultCase];
           const breadcrumbUrl = absUrl(breadcrumbPath);
-          const switchContext: ForkContext = {
+          const forkContext: ForkContext = {
             name,
             isActive,
             activeCase: isValid ? caseValue : activeCase.state,
@@ -243,7 +244,7 @@ export const Fork: FC<{
                 <Case
                   key={value}
                   caseContext={caseContext}
-                  switchContext={switchContext}
+                  forkContext={forkContext}
                   value={value}
                   activeCase={activeCase}
                   wrapper={caseWrapper}>
@@ -258,9 +259,9 @@ export const Fork: FC<{
             </Fragment>
           );
           return (
-            <ForkContext.Provider value={switchContext}>
+            <ForkContext.Provider value={forkContext}>
               {wrapper({
-                ...switchContext,
+                ...forkContext,
                 children: content
               })}
             </ForkContext.Provider>
@@ -274,13 +275,13 @@ export const Fork: FC<{
 const Case: FC<{
   children: ReactNode;
   caseContext: CaseContext;
-  switchContext: ForkContext;
+  forkContext: ForkContext;
   value: string;
   activeCase: Input<string>;
   wrapper?: CaseWrapper;
 }> = ({
   caseContext,
-  switchContext,
+  forkContext,
   children,
   value,
   activeCase,
@@ -288,30 +289,31 @@ const Case: FC<{
 }) => {
   const match = useInput<Maybe<match<{ [key: string]: string }>>>(undefined);
   return (
+    // TODO: DOM tree depth: Replace <Route path> with useRouteMatch(path)
     <Route
-      path={absUrl([...caseContext.path, `:${switchContext.name}(${value})`])}>
+      path={absUrl([...caseContext.path, `:${forkContext.name}(${value})`])}>
       {props => {
-        if (switchContext.isActive && props.match !== null) {
+        if (forkContext.isActive && props.match !== null) {
           match.set(props.match);
         }
-        const isActive = switchContext.isActive && props.match !== null;
+        const isActive = forkContext.isActive && props.match !== null;
         if (isActive) activeCase.set(value);
         const path = [...caseContext.path, value];
         const url = absUrl(path);
         const context: CaseContext = {
           // TODO: Make context readonly
-          parentFork: switchContext,
+          parentFork: forkContext,
           isActive,
           value,
           params: {
-            ...switchContext.params,
-            [switchContext.name]: {
+            ...forkContext.params,
+            [forkContext.name]: {
               value,
               url,
               path
             }
           },
-          paramsOrder: switchContext.paramsOrder,
+          paramsOrder: forkContext.paramsOrder,
           path,
           url
         };
@@ -377,6 +379,7 @@ export const ActiveView: FC<{
 export const ForkConsumer: FC<{
   children: (props: ForkContext) => ReactNode;
 }> = ({ children }) => (
+  // TODO: DOM tree depth: Replace <ForkContext.Consumer> with useContext(ForkContext)
   <ForkContext.Consumer>
     {(context: ForkContext) => {
       if (context === rootForkContext)
@@ -393,6 +396,7 @@ export const ForkConsumer: FC<{
 export const CaseConsumer: FC<{
   children: (props: CaseContext) => ReactNode;
 }> = ({ children }) => (
+  // TODO: DOM tree depth: Replace <CaseContext.Consumer> with useContext(CaseContext)
   <CaseContext.Consumer>
     {(context: CaseContext) => {
       if (context === rootCaseContext)
